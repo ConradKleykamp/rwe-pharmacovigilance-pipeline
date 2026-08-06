@@ -120,6 +120,13 @@ RANK), CTEs, date arithmetic, CASE logic, and subqueries:
 6. Cohort characteristics (`sql/queries/06_cohort_characteristics.sql`)
 7. Data quality summary (`sql/queries/07_data_quality_summary.sql`)
 
+## Project Timeline
+
+A running log of progress by day.
+
+- **Day 1 (Aug 5)**: Project ideation, repo/README setup, Synthea setup/investigation
+- **Day 2 (Aug 6)**: Synthea patient generation, NOTES.md creation, SQL schema design (`sql/01_schema.sql`)
+
 ## Key Findings
 
 _To be populated after analysis is complete — see `reports/analysis_summary.md`._
