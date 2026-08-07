@@ -6,6 +6,7 @@
 -- Tables are created in dependency order: patients first, then encounters
 -- (which reference patients), then the event tables (which reference both).
 
+-- patients: id --> primary key, no foreign key; primary key created by Synthea (thus VARCHAR)
 CREATE TABLE patients (
     id                   VARCHAR(36) PRIMARY KEY,
     birthdate            DATE NOT NULL,
@@ -25,6 +26,8 @@ CREATE TABLE patients (
     income               NUMERIC(10, 2)
 );
 
+-- encounters: first foreign key --> patient_id; NOT NULL guarantees column can't be empty
+-- primary key created by Synthea
 CREATE TABLE encounters (
     id                  VARCHAR(36) PRIMARY KEY,
     patient_id          VARCHAR(36) NOT NULL REFERENCES patients (id),
@@ -35,8 +38,12 @@ CREATE TABLE encounters (
     reasondescription   TEXT
 );
 
+-- manaual index idx_encounters_patient_id: best for easily joining encounters back to patients
+-- best to index columns that will be joined or filtered on often
 CREATE INDEX idx_encounters_patient_id ON encounters (patient_id);
 
+-- conditions: first table with surrogate key; BIGSERIAL --> auto-incrementing int
+-- two foreign keys for patients and encounters (each row belongs to a patient and a specific visit)
 CREATE TABLE conditions (
     id            BIGSERIAL PRIMARY KEY,
     patient_id    VARCHAR(36) NOT NULL REFERENCES patients (id),
@@ -47,10 +54,12 @@ CREATE TABLE conditions (
     description   VARCHAR(100) NOT NULL
 );
 
+-- manual indices
 CREATE INDEX idx_conditions_patient_id ON conditions (patient_id);
 CREATE INDEX idx_conditions_encounter_id ON conditions (encounter_id);
 CREATE INDEX idx_conditions_code ON conditions (code);
 
+-- same method as conditions
 CREATE TABLE medications (
     id                 BIGSERIAL PRIMARY KEY,
     patient_id         VARCHAR(36) NOT NULL REFERENCES patients (id),
@@ -87,6 +96,7 @@ CREATE INDEX idx_observations_patient_id ON observations (patient_id);
 CREATE INDEX idx_observations_encounter_id ON observations (encounter_id);
 CREATE INDEX idx_observations_code ON observations (code);
 
+-- primary key created by Synthea
 CREATE TABLE careplans (
     id                 VARCHAR(36) PRIMARY KEY,
     patient_id         VARCHAR(36) NOT NULL REFERENCES patients (id),
