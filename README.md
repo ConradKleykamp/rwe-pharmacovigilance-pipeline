@@ -103,8 +103,11 @@ out-of-scope noise for a clinical analysis project.
    define tables with appropriate indexes and constraints; implement completeness,
    consistency, and plausibility checks; log validation issues to a dedicated
    validation log table.
-4. **Validation report** (`reports/validation_report.md`) — summarize data quality
-   findings, report a data quality score, and document actions taken.
+4. **Validation report** (`scripts/validate_data.py` → `reports/validation_report.md`) —
+   the script queries `validation_log` and the source tables directly and prints
+   the findings (row counts, per-check violations and rates); the report itself
+   is written by hand using that printed output as its source of truth, keeping
+   narrative interpretation out of the script.
 
 ### Phase 2: SQL Analysis
 
@@ -137,28 +140,34 @@ _To be populated after analysis is complete — see `reports/analysis_summary.md
 
 1. Install [Synthea](https://github.com/synthetichealth/synthea) and generate the
    dataset using the command above; place the CSVs in `data/synthea/`.
-2. Create a PostgreSQL database and set connection details (see
-   `scripts/load_data.py`).
-3. Run `sql/01_schema.sql` to create the schema.
-4. Run `python scripts/load_data.py` to load and clean the data.
-5. Run `sql/02_validation.sql` to execute validation checks, and
-   `python scripts/validate_data.py` to generate the validation report.
-6. Run the queries in `sql/queries/` to reproduce the analysis.
+2. Create a Python virtual environment and install dependencies:
+   `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`.
+3. Create a PostgreSQL database, copy `.env.example` to `.env`, and fill in your
+   connection details.
+4. Run `sql/01_schema.sql` to create the schema.
+5. Run `python scripts/load_data.py` to load and clean the data.
+6. Run `sql/02_validation.sql` to execute validation checks, then
+   `python scripts/validate_data.py` to print the findings — `reports/validation_report.md`
+   is written by hand using that output.
+7. Run the queries in `sql/queries/` to reproduce the analysis.
 
 ## Project Structure
 
 ```
-clinical-trial-data/
+rwe-pharmacovigilance-pipeline/
 ├── README.md                          # Project overview and documentation
 ├── data-dictionary.md                 # Schema documentation, field definitions
-├── .gitignore                         # Excludes data/synthea/ CSVs
+├── NOTES.md                           # Personal working notes
+├── requirements.txt                   # Pinned Python dependencies
+├── .env.example                       # Template for local DB credentials (.env is gitignored)
+├── .gitignore                         # Excludes data/synthea/, .env, .venv/
 │
 ├── data/
 │   └── synthea/                       # Synthea CSV files (excluded from git)
 │
 ├── sql/
 │   ├── 01_schema.sql                  # Table creation, indexes, constraints
-│   ├── 02_validation.sql              # SQL-based validation rules and quality checks
+│   ├── 02_validation.sql              # Validation checks; logs issues to validation_log
 │   │
 │   └── queries/
 │       ├── 01_medication_history.sql
@@ -171,9 +180,9 @@ clinical-trial-data/
 │
 ├── scripts/
 │   ├── load_data.py                   # Python ETL: loading CSVs into PostgreSQL
-│   └── validate_data.py               # Python: running validation, generating report
+│   └── validate_data.py               # Prints validation_log findings (row counts, violations, rates)
 │
 └── reports/
-    ├── validation_report.md           # Data quality findings and summary
+    ├── validation_report.md           # Written by hand from validate_data.py's output
     └── analysis_summary.md            # Key results from SQL queries
 ```

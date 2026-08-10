@@ -1,9 +1,10 @@
 # Validation Report
 
-Generated after running `scripts/load_data.py` followed by `sql/02_validation.sql`
-against the full Synthea dataset (seed 42, ~5,700 Massachusetts patients). Every
-check here targets data that is *structurally* valid — it already satisfied the
-constraints in `sql/01_schema.sql` — but may still be logically wrong in ways
+Written using the findings printed by `scripts/validate_data.py`, which queries
+`validation_log` (populated by `sql/02_validation.sql`) and the source tables
+directly — every number below comes from that output, not typed from memory. Every
+check targets data that is *structurally* valid (it already satisfied the
+constraints in `sql/01_schema.sql`) but may still be logically wrong in ways
 constraints can't catch. See `data-dictionary.md` for the schema these rows
 loaded into.
 
@@ -34,13 +35,13 @@ further action.
 |---|---|---|---|---|---|
 | Missing units on a lab/vital reading | Completeness | `observations` | 5,220 | 2,516,720 | 0.21% |
 | `deathdate` before `birthdate` | Consistency | `patients` | 0 | 5,727 | 0.00% |
-| `stop` before `start` | Consistency | `conditions` | 0 | 199,635 | 0.00% |
+| `stop` before `start` | Consistency | `conditions` | 0 | 146,883 | 0.00% |
 | `stop` before `start` | Consistency | `medications` | 330 | 249,517 | 0.13% |
-| `stop` before `start` | Consistency | `careplans` | 0 | 18,660 | 0.00% |
+| `stop` before `start` | Consistency | `careplans` | 0 | 9,494 | 0.00% |
 | `stop` before `start` | Consistency | `encounters` | 8 | 327,233 | 0.00% |
 | Encounter after patient's death | Consistency | `encounters` | 660 | 88,627 | 0.74% |
 | Negative income/expenses/coverage | Plausibility | `patients` | 0 | 5,727 | 0.00% |
-| Age at death over 120 years | Plausibility | `patients` | 0 | 5,727 | 0.00% |
+| Age at death over 120 years | Plausibility | `patients` | 0 | 727 | 0.00% |
 | Body Height outside 0–300cm | Plausibility | `observations` | 0 | 71,557 | 0.00% |
 | Pain severity outside 0–10 | Plausibility | `observations` | 0 | 136,958 | 0.00% |
 
@@ -69,9 +70,9 @@ not just its logical premise.
   scheduled follow-ups generated before a subsequent death event), not a defect
   in the ETL or schema.
 - **330 medications have a `stop` date before their `start` date** (0.13% of
-  medications with a stop date) — likely a data-entry/generation quirk in the
-  source rather than anything introduced during loading, since the same
-  comparison run directly against the raw CSV would show the same rows.
+  medications with a stop date) — likely a data-generation quirk in the source
+  rather than anything introduced during loading, since the same comparison run
+  directly against the raw CSV would show the same rows.
 - **5,220 lab/vital-sign readings have no recorded unit** (0.21%) — plausibly
   readings where the unit was implicit in the test type and Synthea didn't
   populate it, or qualitative readings that don't carry one.

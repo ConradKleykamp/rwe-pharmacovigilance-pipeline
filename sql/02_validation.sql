@@ -135,7 +135,7 @@ WHERE pat.deathdate IS NOT NULL
 -- observations: Body Height (LOINC 8302-2) outside a plausible human range
 INSERT INTO validation_log (check_name, table_name, record_id, issue_description)
 SELECT
-    'implausible_value_range',
+    'implausible_height',
     'observations',
     obs.id::TEXT,
     'Body Height value ' || obs.value_numeric || ' ' || COALESCE(obs.units, '') || ' is outside 0-300cm'
@@ -146,7 +146,7 @@ WHERE obs.code = '8302-2'
 -- observations: Pain severity (LOINC 72514-3) outside its defined 0-10 scale
 INSERT INTO validation_log (check_name, table_name, record_id, issue_description)
 SELECT
-    'implausible_value_range',
+    'implausible_pain_severity',
     'observations',
     obs.id::TEXT,
     'Pain severity value ' || obs.value_numeric || ' is outside the 0-10 scale'
