@@ -32,7 +32,7 @@ surveillance, pharmacoepidemiology, and observational outcomes research all rely
 on the same SQL skill set (multi-table joins, window functions, CTEs, cohort
 definition) as trial data management.
 
-Two places where the data itself doesn't provide a concept directly, and a
+Three places where the data itself doesn't provide a concept directly, and a
 proxy/reference definition is used instead, are documented explicitly rather than
 presented as if they came from the source data:
 
@@ -46,6 +46,15 @@ presented as if they came from the source data:
   built from established clinical knowledge, using drug names that actually appear
   in this dataset. This reference table is documented as curated domain data, not
   derived from Synthea.
+- **Medication adherence**: Synthea doesn't label fills as adherent or
+  non-adherent. This project defines a treatment gap as more than 30 days between
+  one fill's `stop` date and the next fill of the same drug for the same patient,
+  assessed per patient-drug pair rather than per patient overall. Analysis is
+  scoped to oral tablets with 5+ total fills — injectables/gels (e.g. dental
+  fluoride gel, IV antibiotics given during a hospital stay) are administered
+  episodically rather than taken continuously at home, so a multi-year gap between
+  them isn't a real lapse in therapy, and a coincidental pair of one-off
+  prescriptions years apart isn't either. See `sql/queries/01_medication_history.sql`.
 
 ## Data
 
@@ -130,7 +139,7 @@ A running log of progress by day.
 - **Day 1 (Aug 5)**: Project ideation; repo/README setup; Synthea setup/investigation
 - **Day 2 (Aug 6)**: Synthea patient generation; NOTES.md creation; SQL schema design (`sql/01_schema.sql`)
 - **Day 3 (Aug 7)**: Finalized and annotated `sql/01_schema.sql`; created `data-dictionary.md`
-- **Day 4 (Aug 10)**: Fixed schema gaps found in a full audit (`allergies.start/stop`, `patients.FIPS` documentation); set up local PostgreSQL; `.env` credentials, and Python virtual environment; built and successfully ran `scripts/load_data.py`; loading all ~4.86M rows across 7 tables; built `sql/02_validation.sql` (11 checks across completeness/consistency/plausibility) and `reports/validation_report.md` (99.87% data quality score) — Phase 1 (ETL & Data Validation) complete
+- **Day 4 (Aug 10)**: Fixed schema gaps found in a full audit (`allergies.start/stop`, `patients.FIPS` documentation); set up local PostgreSQL; `.env` credentials, and Python virtual environment; built and successfully ran `scripts/load_data.py`; loading all ~4.86M rows across 7 tables; built `sql/02_validation.sql` (11 checks across completeness/consistency/plausibility) and `reports/validation_report.md` (99.87% data quality score) — Phase 1 (ETL & Data Validation) complete. Reworked `scripts/validate_data.py` to only print findings, with `validation_report.md` written by hand from that output. Started Phase 2: built `sql/queries/01_medication_history.sql` (medication history & adherence), scoped to oral tablets with 5+ fills after catching false positives from episodic/injectable medications in the initial version.
 
 ## Key Findings
 
