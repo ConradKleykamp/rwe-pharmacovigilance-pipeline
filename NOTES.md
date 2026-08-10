@@ -38,7 +38,31 @@
 - surrogate key tables do not receive id column from pandas; BIGSERIAL will accomplish this later
 
 
-## Validation
-- completeness
-- consistency
-- plausibility
+# Validation Approach
+
+## Completeness
+  - rows missing something the schema allows to be blank but shouldn't usually be
+  - 1) observations
+    - category in ('laboratory', 'vital-signs') but units row is NULL (a lab/vital reading with no unit is suspicious)
+  - 2) medications
+    - instinct: active medications with NULL reasoncode/reasondescription
+    - FINDING: 59% of active medications have no reasoncode; the empty field is just a normal characteristic of the data
+
+## Consistency
+  - logically contradictory data across fields/tables
+  - 1) patients
+    - deathdate < birthdate (impossible)
+  - 2) any table with start/stop --> stop < start (conditions, medications, careplans, encounters)
+  - 3) encounters
+    - encounters.start occurring AFTER the patient's deathdate
+
+## Plausibility
+  - values outside realistic bounds
+  - 1) patients
+    - income < 0, healthcare_expenses < 0, healthcare_coverage < 0
+  - 2) patients 
+    - age > 120 (deathdate - birthdate)
+  - 3) observations
+    - vital-sign codes checked against logical physiological bounds
+    - Ex: 8302-2 --> body height outside of 0-300 cm range
+  
