@@ -1,5 +1,6 @@
 """ETL: load Synthea CSVs (data/synthea/) into PostgreSQL, per sql/01_schema.sql."""
 
+# Imports
 import logging
 import os
 from pathlib import Path
@@ -9,13 +10,14 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
+# Setting path, chunk size
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "synthea"
 CHUNK_SIZE = 5000
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-
+# Building SQLAlchemy engine; loading credentials from env
 def get_engine() -> Engine:
     """Build a SQLAlchemy engine from credentials in .env (never hardcoded — see .env.example)."""
     load_dotenv()
@@ -27,27 +29,26 @@ def get_engine() -> Engine:
     url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{name}"
     return create_engine(url)
 
-
+# Converting Nan/NaT/NA from blank CSV fields to None; Ensures Postgres stores true NULLs
 def clean_nulls(df: pd.DataFrame) -> pd.DataFrame:
-    """Convert pandas' NaN/NaT/NA (from blank CSV fields) to None, so Postgres stores true NULLs."""
     return df.astype(object).where(pd.notnull(df), None)
 
-
+# Emptying all tables before loading; Ensures we can re-run the script if needed without dublicate-key errors
 def truncate_all(engine: Engine) -> None:
-    """Empty every table before loading, so this script can be re-run without duplicate-key errors."""
     tables = "patients, encounters, conditions, medications, observations, careplans, allergies"
     with engine.begin() as conn:
         conn.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE;"))
     logger.info("Truncated all tables")
 
-
+# Shared helper function that every "load_..." function calls
+# 
 def load_table(df: pd.DataFrame, table_name: str, engine: Engine) -> None:
     row_count = len(df)
     df = clean_nulls(df)
     df.to_sql(table_name, engine, if_exists="append", index=False, method="multi", chunksize=CHUNK_SIZE)
     logger.info("Loaded %d rows into %s", row_count, table_name)
 
-
+# Loading in patients data
 def load_patients(engine: Engine) -> None:
     df = pd.read_csv(
         DATA_DIR / "patients.csv",
@@ -144,7 +145,7 @@ def load_allergies(engine: Engine) -> None:
     df = df.rename(columns={"patient": "patient_id", "encounter": "encounter_id"})
     load_table(df, "allergies", engine)
 
-
+# Main load function
 def main() -> None:
     engine = get_engine()
     truncate_all(engine)

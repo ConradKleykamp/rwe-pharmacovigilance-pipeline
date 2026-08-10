@@ -36,3 +36,9 @@
 - empty fields in CSV must explicitly be converted to blanks (None) before loading; NaN can be written as a literal string by Postgres
 - observations.VALUE becomes value_numeric or value_text depending on rows TYPE
 - surrogate key tables do not receive id column from pandas; BIGSERIAL will accomplish this later
+
+
+## Validation
+- completeness
+- consistency
+- plausibility
