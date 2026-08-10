@@ -26,7 +26,7 @@ Demographic and cohort-definition table. One row per synthetic patient. Source: 
 | `lat`, `lon` | `NUMERIC` | Yes | `LAT`, `LON` | Geographic coordinates |
 | `healthcare_expenses`, `healthcare_coverage`, `income` | `NUMERIC(10,2)` | Yes | same | Dollar amounts |
 
-**Dropped columns**: `SSN`, `DRIVERS`, `PASSPORT`, `PREFIX`, `FIRST`, `MIDDLE`, `LAST`, `SUFFIX`, `MAIDEN`, `BIRTHPLACE`, `ADDRESS` — direct patient identifiers/name fields, not needed for analysis.
+**Dropped columns**: `SSN`, `DRIVERS`, `PASSPORT`, `PREFIX`, `FIRST`, `MIDDLE`, `LAST`, `SUFFIX`, `MAIDEN`, `BIRTHPLACE`, `ADDRESS` — direct patient identifiers/name fields, not needed for analysis. `FIPS` — county FIPS code, redundant with `county` (already captured) and blank in 1,489 of 5,727 rows; not used by any of the seven analysis queries.
 
 ---
 
@@ -133,6 +133,7 @@ Medication and environmental allergy history. One row per recorded allergy/intol
 | `id` | `BIGSERIAL` | No | *(none — surrogate)* | Same reasoning as `conditions.id`; no duplicates found on the natural key here, but kept consistent with the other event tables |
 | `patient_id` | `VARCHAR(36)` | No | `PATIENT` | FK → `patients.id` |
 | `encounter_id` | `VARCHAR(36)` | No | `ENCOUNTER` | FK → `encounters.id` |
+| `start`, `stop` | `DATE` | No / Yes | `START`, `STOP` | `STOP` is blank in all 5,504 rows — every recorded allergy is still "active" in the simulation, so a `NULL` stop is the norm here, not the exception |
 | `code` | `VARCHAR(20)` | No | `CODE` | |
 | `description` | `TEXT` | No | `DESCRIPTION` | Allergen name |
 | `type` | `VARCHAR(20)` | Yes | `TYPE` | allergy / intolerance |

@@ -1,3 +1,11 @@
 # Synthea generated data
 data/synthea/
+
+# Claude Code temp settings
 .claude/
+
+# Local database credentials
+.env
+
+# Python virtual environment
+.venv/

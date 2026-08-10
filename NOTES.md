@@ -20,3 +20,19 @@
 ## Dropping Personal Identifiers
 - SSN, drivers, passport, prefix, first, middle, last, suffix, maiden, birthplace, address
 - although the data is synthetic, these fields are not essential for this project and would likely be excluded in a real world study to ensure HIPAA/ethical compliances
+
+
+# ETL Approach
+
+## Loading Data
+- one function per table (load_patients, load_encounters, etc.)
+- each function reads the provided CSV --> cleans/transforms/writes to Postgres
+- main() function runs them in same dependency order as the schema
+- pandas .to_sql()
+- chunked batch insert (instead of row-by-row)
+- Loading is logged, one line per table
+
+## Cleaning/Transforming Data
+- empty fields in CSV must explicitly be converted to blanks (None) before loading; NaN can be written as a literal string by Postgres
+- observations.VALUE becomes value_numeric or value_text depending on rows TYPE
+- surrogate key tables do not receive id column from pandas; BIGSERIAL will accomplish this later

@@ -124,9 +124,10 @@ RANK), CTEs, date arithmetic, CASE logic, and subqueries:
 
 A running log of progress by day.
 
-- **Day 1 (Aug 5)**: Project ideation, repo/README setup, Synthea setup/investigation
-- **Day 2 (Aug 6)**: Synthea patient generation, NOTES.md creation, SQL schema design (`sql/01_schema.sql`)
-- **Day 3 (Aug 7)**: Finalized and annotated `sql/01_schema.sql`, created `data-dictionary.md`
+- **Day 1 (Aug 5)**: Project ideation; repo/README setup; Synthea setup/investigation
+- **Day 2 (Aug 6)**: Synthea patient generation; NOTES.md creation; SQL schema design (`sql/01_schema.sql`)
+- **Day 3 (Aug 7)**: Finalized and annotated `sql/01_schema.sql`; created `data-dictionary.md`
+- **Day 4 (Aug 10)**: Fixed schema gaps found in a full audit (`allergies.start/stop`, `patients.FIPS` documentation); set up local PostgreSQL; `.env` credentials, and Python virtual environment; built and successfully ran `scripts/load_data.py`; loading all ~4.86M rows across 7 tables
 
 ## Key Findings
 

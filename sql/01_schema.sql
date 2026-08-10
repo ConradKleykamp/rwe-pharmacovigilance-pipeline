@@ -114,6 +114,8 @@ CREATE TABLE allergies (
     id            BIGSERIAL PRIMARY KEY,
     patient_id    VARCHAR(36) NOT NULL REFERENCES patients (id),
     encounter_id  VARCHAR(36) NOT NULL REFERENCES encounters (id),
+    start         DATE NOT NULL,
+    stop          DATE,
     code          VARCHAR(20) NOT NULL,
     description   TEXT NOT NULL,
     type          VARCHAR(20),
