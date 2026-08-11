@@ -21,8 +21,7 @@ Every check targets data that is structurally valid (it already satisfied the co
 
 Calculation: Data quality score = (total_rows - total_violations) / total_rows * 100
 
-**99.87%** of loaded rows passed every validation check that applied to them (4,854,551 of 4,860,769). The 6,218 flagged rows are documented below, table by table. The flagged rows are preserved in `validation_log` for traceability, and the 
-recommendation section addresses whether they need any further action.
+**99.87%** of loaded rows passed every validation check that applied to them (4,854,551 of 4,860,769). The 6,218 flagged rows are documented below, table by table. The flagged rows are preserved in `validation_log` for traceability, and the recommendation section addresses whether they need any further action.
 
 ## Checks run
 
@@ -49,13 +48,16 @@ Before finalizing this list, I evaluated a completeness check on `medications.re
 ## Findings
 
 - **660 encounters occur after the patient's recorded death** 
-  0.74% of encounters belonging to deceased patients. This is likely a Synthea simulation artifact (e.g. scheduled follow-ups generated before a subsequent death event), not a defect in the ETL or schema.
+  - 0.74% of encounters belonging to deceased patients. 
+  - This is likely a Synthea simulation artifact (e.g. scheduled follow-ups generated before a subsequent death event), not a defect in the ETL or schema.
 - **330 medications have a `stop` date before their `start` date** 
-  0.13% of medications with a stop date. This is likely a data-generation quirk in the source rather than anything introduced during loading, since the same comparison run directly against the raw CSV would show the same rows.
+  - 0.13% of medications with a stop date. 
+  - This is likely a data-generation quirk in the source rather than anything introduced during loading, since the same comparison run directly against the raw CSV would show the same rows.
 - **5,220 lab/vital-sign readings have no recorded unit** 
-  0.21%. Likely readings where the unit was implicit in the test type and Synthea didn't populate it, or qualitative readings that don't carry one.
+  - 0.21%. 
+  - Likely readings where the unit was implicit in the test type and Synthea didn't populate it, or qualitative readings that don't carry one.
 - **8 encounters have a `stop` before their `start`**
-  Negligible in volume, same likely cause as the medications finding above.
+  - Negligible in volume, same likely cause as the medications finding above.
 - Every plausibility check (negative dollar amounts, implausible age at death, out-of-range Body Height, out-of-range Pain severity) came back completely clean. This is to be expected, since Synthea generates physiologically-plausible values by design, but worth confirming rather than assuming.
 
 ## Recommendations
