@@ -49,10 +49,15 @@ presented as if they came from the source data:
   cutoff. See `sql/queries/02_adverse_events.sql`.
 - **Drug interactions**: Synthea does not encode contraindications between
   medications. A small, hand-curated reference table of known interacting drug
-  pairs (e.g., warfarin + NSAIDs, ACE inhibitors + potassium-sparing diuretics) is
-  built from established clinical knowledge, using drug names that actually appear
-  in this dataset. This reference table is documented as curated domain data, not
-  derived from Synthea.
+  class pairs (warfarin + NSAIDs, clopidogrel + NSAIDs, ACE inhibitors + NSAIDs,
+  benzodiazepines + opioids, verapamil + statins) is built from established
+  clinical knowledge, using only drug names verified to actually appear in this
+  dataset — e.g. an ACE-inhibitor/potassium-sparing-diuretic pair was considered
+  and dropped since no potassium-sparing diuretic exists in this data. Medications
+  are classified by ingredient name (`ILIKE` on `description`) rather than by
+  `code`, since the same drug has a different RxNorm code per dose/form. This
+  reference table is documented as curated domain data, not derived from Synthea.
+  See `sql/queries/03_drug_interactions.sql`.
 - **Medication adherence**: Synthea doesn't label fills as adherent or
   non-adherent. This project defines a treatment gap as more than 30 days between
   one fill's `stop` date and the next fill of the same drug for the same patient,
@@ -147,7 +152,7 @@ A running log of progress by day.
 - **Day 2 (Aug 6)**: Synthea patient generation; NOTES.md creation; SQL schema design (`sql/01_schema.sql`)
 - **Day 3 (Aug 7)**: Finalized and annotated `sql/01_schema.sql`; created `data-dictionary.md`
 - **Day 4 (Aug 10)**: Fixed schema gaps found in a full audit (`allergies.start/stop`, `patients.FIPS` documentation); set up local PostgreSQL; `.env` credentials, and Python virtual environment; built and successfully ran `scripts/load_data.py`; loading all ~4.86M rows across 7 tables; built `sql/02_validation.sql` (11 checks across completeness/consistency/plausibility) and `reports/validation_report.md` (99.87% data quality score) — Phase 1 (ETL & Data Validation) complete. Reworked `scripts/validate_data.py` to only print findings, with `validation_report.md` written by hand from that output. Started Phase 2: built `sql/queries/01_medication_history.sql` (medication history & adherence), scoped to oral tablets with 5+ fills after catching false positives from episodic/injectable medications in the initial version.
-- **Day 5 (Aug 11)**: Built `sql/queries/02_adverse_events.sql` (adverse event identification — inpatient/emergency encounters overlapping active medication windows, deliberately not restricted to oral tablets, severity bucketed by polypharmacy thresholds). Narrowed Phase 2 scope from seven queries to three (medication adherence, adverse events, drug interactions) to allow deeper focus on each and align with the three proxy definitions already documented above.
+- **Day 5 (Aug 11)**: Built `sql/queries/02_adverse_events.sql` (adverse event identification — inpatient/emergency encounters overlapping active medication windows, deliberately not restricted to oral tablets, severity bucketed by polypharmacy thresholds). Narrowed Phase 2 scope from seven queries to three (medication adherence, adverse events, drug interactions) to allow deeper focus on each and align with the three proxy definitions already documented above. Built `sql/queries/03_drug_interactions.sql` (drug interaction flags — classifies medications into drug classes by ingredient name, self-joins on overlapping active windows, matches against a curated reference table of 5 known-interacting class pairs verified against drugs actually present in the data) — Phase 2 (SQL Analysis) complete.
 
 ## Key Findings
 
