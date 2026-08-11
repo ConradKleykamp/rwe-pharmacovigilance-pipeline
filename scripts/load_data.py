@@ -1,4 +1,4 @@
-"""ETL: load Synthea CSVs (data/synthea/) into PostgreSQL, per sql/01_schema.sql."""
+# ETL: load Synthea CSVs (data/synthea/) into PostgreSQL, per sql/01_schema.sql
 
 # Imports
 import logging

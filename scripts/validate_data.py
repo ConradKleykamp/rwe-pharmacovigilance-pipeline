@@ -1,9 +1,7 @@
-"""Print the findings from sql/02_validation.sql: row counts, per-check violation
-counts and rates, and the reasoncode rates behind the check we evaluated and
-rejected. reports/validation_report.md is written by hand using this output —
-this script's job stops at surfacing the numbers, not authoring the write-up.
-"""
+# Script that queries what 02_validation.sql logs
+# validation_report.md is written manually (not created by this script)
 
+# Imports/setup
 import logging
 import os
 
@@ -16,7 +14,8 @@ TABLES = ["patients", "encounters", "conditions", "medications", "observations",
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
-# One entry per check defined in sql/02_validation.sql. "applicable_sql" computes
+# One entry per check defined in sql/02_validation.sql. 
+# "applicable_sql" computes
 # the population that check could actually flag (e.g. the stop-before-start check
 # on medications only applies to medications that HAVE a stop date), so the rate
 # printed below is meaningful rather than violations / whole-table size.
@@ -93,7 +92,7 @@ CHECKS = [
     },
 ]
 
-
+# Building SQLAlchemy engine
 def get_engine() -> Engine:
     """Build a SQLAlchemy engine from credentials in .env (never hardcoded — see .env.example)."""
     load_dotenv()
@@ -105,7 +104,7 @@ def get_engine() -> Engine:
     url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{name}"
     return create_engine(url)
 
-
+# Getting row counts for the summary section
 def get_row_counts(engine: Engine) -> dict[str, int]:
     counts = {}
     with engine.connect() as conn:
@@ -113,7 +112,9 @@ def get_row_counts(engine: Engine) -> dict[str, int]:
             counts[table] = conn.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar()
     return counts
 
-
+# For each check, runs two live queries
+# 1) how many rows are in validation_log for that check/table
+# 2) how many rows were in the applicable population
 def get_check_results(engine: Engine) -> list[dict]:
     """Attach live violation counts and applicable-population rates to each check in CHECKS."""
     results = []
@@ -128,7 +129,10 @@ def get_check_results(engine: Engine) -> list[dict]:
             results.append({**check, "violations": violations, "applicable": applicable, "rate": rate})
     return results
 
-
+# Not tied to a CHECKS entry
+# I considered flagging medications with a NULL reasoncode as a validation issue (see 02_validation.sql or README.md)
+# The Null rate was high enough (59% of active medications with no reasoncode) that it is likely a normal characteristic of the data
+# Computing the rates mentioned above for transparency
 def get_reasoncode_rates(engine: Engine) -> tuple[float, float]:
     """Live numbers behind the reasoncode check we evaluated and rejected (see validation_report.md)."""
     with engine.connect() as conn:
@@ -141,7 +145,8 @@ def get_reasoncode_rates(engine: Engine) -> tuple[float, float]:
         """)).scalar()
     return float(overall), float(active)
 
-
+# Printing findings in formatted table output
+# Data quality score = (total_rows - total_violations) / total_rows * 100
 def print_findings(row_counts: dict[str, int], check_results: list[dict], reasoncode_rates: tuple[float, float]) -> None:
     total_rows = sum(row_counts.values())
     total_violations = sum(c["violations"] for c in check_results)

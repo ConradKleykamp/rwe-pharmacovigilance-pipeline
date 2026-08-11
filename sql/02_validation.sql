@@ -1,10 +1,11 @@
--- Data validation for the RWE / pharmacovigilance pipeline.
--- Run after scripts/load_data.py. Every check below is structurally valid data
--- (it already passed the constraints in 01_schema.sql) that may still be
--- logically wrong. Each check inserts its violations into validation_log rather
--- than failing the script, so reports/validation_report.md can summarize findings
--- after the fact instead of the run stopping at the first problem.
+-- Data validation for the RWE / pharmacovigilance pipeline
+-- Runs after scripts/load_data.py
+-- Data has already passed the constraints in 01_schema.sql
+-- However, the validation checks search for data that may still be logically wrong
+-- Each violation is inserted into validation_log rather than failing the script
+-- reports/validation_report.md summarizes these findings
 
+-- Validation log of anything flagging as logically wrong
 CREATE TABLE validation_log (
     id                 BIGSERIAL PRIMARY KEY,
     check_name         VARCHAR(100) NOT NULL,
@@ -14,14 +15,13 @@ CREATE TABLE validation_log (
     detected_at        TIMESTAMP NOT NULL DEFAULT now()
 );
 
--- ============================================================
--- Completeness: data that's technically allowed to be NULL but
--- usually shouldn't be, at the rate it actually occurs here.
--- ============================================================
+-- Completeness: rows that are allowed to be empty but shouldn't be at this rate
+-- 1) observations: a lab or vital-sign reading with no unit is suspicious
+-- Verified beforehand, only 0.2% of these rows are missing units, so this is a genuine minority
+-- 2) medications (not included here): active medications with NULL reasoncode/reasondescription
+-- Verified beforehand, 59% of active medications have no reasoncode, the empty field is a normal characteristic
 
--- observations: a lab or vital-sign reading with no unit is suspicious.
--- Verified beforehand: only 0.2% of these rows are missing units, so this
--- check flags a genuine minority, not the norm.
+-- Flagging lab/vital-sign observations with a NULL units
 INSERT INTO validation_log (check_name, table_name, record_id, issue_description)
 SELECT
     'missing_units_on_measurement',
@@ -32,10 +32,10 @@ FROM observations obs
 WHERE obs.category IN ('laboratory', 'vital-signs')
   AND obs.units IS NULL;
 
--- ============================================================
--- Consistency: fields that contradict each other, none of it
--- caught by foreign keys or NOT NULL constraints.
--- ============================================================
+-- Consistency: logically contradictory data across fields/tables
+-- 1) patients: death recorded before birth
+-- 2) any table with start/stop: stop < start (conditions, medications, careplans, encounters)
+-- 3) encounters: encounters.start occuring after the patient's deathdate
 
 -- patients: death recorded before birth
 INSERT INTO validation_log (check_name, table_name, record_id, issue_description)
@@ -48,7 +48,7 @@ FROM patients pat
 WHERE pat.deathdate IS NOT NULL
   AND pat.deathdate < pat.birthdate;
 
--- stop date before start date, checked per table (each has its own start/stop pair)
+-- conditions: stop date before start date
 INSERT INTO validation_log (check_name, table_name, record_id, issue_description)
 SELECT
     'stop_before_start',
@@ -59,6 +59,7 @@ FROM conditions cond
 WHERE cond.stop IS NOT NULL
   AND cond.stop < cond.start;
 
+-- medications: stop date before start date
 INSERT INTO validation_log (check_name, table_name, record_id, issue_description)
 SELECT
     'stop_before_start',
@@ -69,6 +70,7 @@ FROM medications med
 WHERE med.stop IS NOT NULL
   AND med.stop < med.start;
 
+-- careplans: stop date before start date
 INSERT INTO validation_log (check_name, table_name, record_id, issue_description)
 SELECT
     'stop_before_start',
@@ -79,6 +81,7 @@ FROM careplans careplan
 WHERE careplan.stop IS NOT NULL
   AND careplan.stop < careplan.start;
 
+-- encounters: stop date before start date
 INSERT INTO validation_log (check_name, table_name, record_id, issue_description)
 SELECT
     'stop_before_start',
@@ -101,9 +104,10 @@ JOIN patients pat ON enc.patient_id = pat.id
 WHERE pat.deathdate IS NOT NULL
   AND enc.start::DATE > pat.deathdate;
 
--- ============================================================
 -- Plausibility: values outside realistic bounds.
--- ============================================================
+-- 1) patients: negative dollar amounts (income, healthcare expenses/coverage)
+-- 2) patients: age > 120
+-- 3) observations: vital signs checked against logical physiological bounds
 
 -- patients: negative dollar amounts (income, healthcare expenses/coverage)
 INSERT INTO validation_log (check_name, table_name, record_id, issue_description)
