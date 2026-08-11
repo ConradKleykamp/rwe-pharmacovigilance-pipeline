@@ -49,7 +49,7 @@ Visit backbone. One row per healthcare encounter; every other event table joins 
 
 ## `conditions`
 
-Diagnoses and comorbidities. One row per condition recorded during an encounter. Source: `data/synthea/conditions.csv`.
+Diagnoses and comorbidities. One row per condition recorded during an encounter. Source: `data/synthea/conditions.csv`. Not queried by the three Phase 2 analysis queries — loaded and validated in Phase 1 for schema completeness and portfolio breadth.
 
 | Column | Type | Nullable | Source column | Notes |
 |---|---|---|---|---|
@@ -88,7 +88,7 @@ Drug exposure, dosing, and dispensing history. One row per medication order/disp
 
 ## `observations`
 
-Labs, vitals, and survey results used for treatment-outcome measurement. One row per recorded observation. Source: `data/synthea/observations.csv`. This is the largest table (~4M rows).
+Labs, vitals, and survey results. One row per recorded observation. Source: `data/synthea/observations.csv`. This is the largest table (~4M rows). Not queried by the three Phase 2 analysis queries (adherence, adverse events, drug interactions) — loaded and validated in Phase 1 for schema completeness and portfolio breadth.
 
 | Column | Type | Nullable | Source column | Notes |
 |---|---|---|---|---|
@@ -109,7 +109,7 @@ Labs, vitals, and survey results used for treatment-outcome measurement. One row
 
 ## `careplans`
 
-Care plan / therapy context. One row per care plan assigned to a patient. Source: `data/synthea/careplans.csv`.
+Care plan / therapy context. One row per care plan assigned to a patient. Source: `data/synthea/careplans.csv`. Not queried by the three Phase 2 analysis queries — loaded and validated in Phase 1 for schema completeness and portfolio breadth.
 
 | Column | Type | Nullable | Source column | Notes |
 |---|---|---|---|---|
@@ -118,7 +118,7 @@ Care plan / therapy context. One row per care plan assigned to a patient. Source
 | `encounter_id` | `VARCHAR(36)` | No | `ENCOUNTER` | FK → `encounters.id` |
 | `start`, `stop` | `DATE` | No / Yes | `START`, `STOP` | `NULL` stop = care plan still active |
 | `description` | `VARCHAR(100)` | No | `DESCRIPTION` | Max observed length 80 chars |
-| `reasondescription` | `VARCHAR(100)` | Yes | `REASONDESCRIPTION` | e.g. prediabetes, essential hypertension, CHF — candidate cohort definitions for the treatment-outcomes query |
+| `reasondescription` | `VARCHAR(100)` | Yes | `REASONDESCRIPTION` | e.g. prediabetes, essential hypertension, CHF |
 
 **Dropped columns**: `CODE`, `REASONCODE` — raw SNOMED codes for the care plan and its reason; none of the seven analysis queries need to join on them, so the human-readable `description`/`reasondescription` text is sufficient here.
 
@@ -126,7 +126,7 @@ Care plan / therapy context. One row per care plan assigned to a patient. Source
 
 ## `allergies`
 
-Medication and environmental allergy history. One row per recorded allergy/intolerance, with up to two reactions flattened into the same row. Source: `data/synthea/allergies.csv`.
+Medication and environmental allergy history. One row per recorded allergy/intolerance, with up to two reactions flattened into the same row. Source: `data/synthea/allergies.csv`. Not queried by the three Phase 2 analysis queries — loaded and validated in Phase 1 for schema completeness and portfolio breadth.
 
 | Column | Type | Nullable | Source column | Notes |
 |---|---|---|---|---|
@@ -137,7 +137,7 @@ Medication and environmental allergy history. One row per recorded allergy/intol
 | `code` | `VARCHAR(20)` | No | `CODE` | |
 | `description` | `TEXT` | No | `DESCRIPTION` | Allergen name |
 | `type` | `VARCHAR(20)` | Yes | `TYPE` | allergy / intolerance |
-| `category` | `VARCHAR(20)` | Yes | `CATEGORY` | environment, food, medication — `medication` is the relevant subset for safety-signal queries |
+| `category` | `VARCHAR(20)` | Yes | `CATEGORY` | environment, food, medication — `medication` is the relevant subset for medication-safety analysis |
 | `reaction1`, `reaction2` | `VARCHAR(20)` | Yes | `REACTION1`, `REACTION2` | SNOMED codes for up to two reactions |
 | `description1`, `description2` | `TEXT` | Yes | `DESCRIPTION1`, `DESCRIPTION2` | |
 | `severity1`, `severity2` | `VARCHAR(20)` | Yes | `SEVERITY1`, `SEVERITY2` | MILD / MODERATE / SEVERE |

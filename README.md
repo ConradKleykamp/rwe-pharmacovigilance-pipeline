@@ -24,8 +24,8 @@ visit schedules, or enrollment/consent records in this dataset.
 This project is therefore framed as a **real-world evidence (RWE) and
 pharmacovigilance analysis** rather than a clinical trial analysis. The questions
 it answers — medication adherence, adverse events linked to active medications,
-drug interaction exposure, safety signals, and treatment outcomes — are exactly
-the kind of observational, EHR-based analyses a clinical data programmer performs
+and drug interaction exposure — are exactly the kind of observational, EHR-based
+analyses a clinical data programmer performs
 when working with real-world patient data rather than a controlled trial dataset.
 This is a closely related and highly relevant discipline: post-market safety
 surveillance, pharmacoepidemiology, and observational outcomes research all rely
@@ -38,8 +38,15 @@ presented as if they came from the source data:
 
 - **Adverse events**: Synthea has no "adverse event" flag. This project defines an
   adverse event proxy as an inpatient or emergency encounter that overlaps a
-  patient's active medication window. This is documented as a modeled proxy in
-  `data-dictionary.md`, not a literal adverse event report.
+  patient's active medication window, excluding the encounter that prescribed the
+  medication itself. This is documented as a modeled proxy in `data-dictionary.md`,
+  not a literal adverse event report. Unlike the medication-adherence query below,
+  this one is **not** restricted to oral tablets — adherence only makes sense for
+  drugs taken continuously at home, but concurrent drug exposure during a
+  hospitalization applies just as much to an injectable or IV medication.
+  Severity is bucketed by concurrent active-medication count, using the standard
+  pharmacoepidemiology polypharmacy thresholds (5+, 10+) rather than an invented
+  cutoff. See `sql/queries/02_adverse_events.sql`.
 - **Drug interactions**: Synthea does not encode contraindications between
   medications. A small, hand-curated reference table of known interacting drug
   pairs (e.g., warfarin + NSAIDs, ACE inhibitors + potassium-sparing diuretics) is
@@ -120,17 +127,17 @@ out-of-scope noise for a clinical analysis project.
 
 ### Phase 2: SQL Analysis
 
-Seven queries answering clinically relevant questions, covering multi-table
-JOINs, aggregations, window functions (ROW_NUMBER, LAG, FIRST_VALUE, LAST_VALUE,
-RANK), CTEs, date arithmetic, CASE logic, and subqueries:
+Three queries answering clinically relevant questions, covering multi-table
+JOINs, aggregations, window functions, CTEs, date arithmetic, and CASE logic.
+Scoped to three (down from an original plan of seven) to allow deeper, unhurried
+treatment of each query, rather than moving fast across a longer list — and
+because these three map directly onto the three proxy definitions documented
+above, forming one coherent narrative: adherence → adverse events → interaction
+risk.
 
 1. Medication history & adherence (`sql/queries/01_medication_history.sql`)
 2. Adverse event identification (`sql/queries/02_adverse_events.sql`)
 3. Drug interaction flags (`sql/queries/03_drug_interactions.sql`)
-4. Safety signal detection (`sql/queries/04_safety_signals.sql`)
-5. Treatment outcomes (`sql/queries/05_treatment_outcomes.sql`)
-6. Cohort characteristics (`sql/queries/06_cohort_characteristics.sql`)
-7. Data quality summary (`sql/queries/07_data_quality_summary.sql`)
 
 ## Project Timeline
 
@@ -140,6 +147,7 @@ A running log of progress by day.
 - **Day 2 (Aug 6)**: Synthea patient generation; NOTES.md creation; SQL schema design (`sql/01_schema.sql`)
 - **Day 3 (Aug 7)**: Finalized and annotated `sql/01_schema.sql`; created `data-dictionary.md`
 - **Day 4 (Aug 10)**: Fixed schema gaps found in a full audit (`allergies.start/stop`, `patients.FIPS` documentation); set up local PostgreSQL; `.env` credentials, and Python virtual environment; built and successfully ran `scripts/load_data.py`; loading all ~4.86M rows across 7 tables; built `sql/02_validation.sql` (11 checks across completeness/consistency/plausibility) and `reports/validation_report.md` (99.87% data quality score) — Phase 1 (ETL & Data Validation) complete. Reworked `scripts/validate_data.py` to only print findings, with `validation_report.md` written by hand from that output. Started Phase 2: built `sql/queries/01_medication_history.sql` (medication history & adherence), scoped to oral tablets with 5+ fills after catching false positives from episodic/injectable medications in the initial version.
+- **Day 5 (Aug 11)**: Built `sql/queries/02_adverse_events.sql` (adverse event identification — inpatient/emergency encounters overlapping active medication windows, deliberately not restricted to oral tablets, severity bucketed by polypharmacy thresholds). Narrowed Phase 2 scope from seven queries to three (medication adherence, adverse events, drug interactions) to allow deeper focus on each and align with the three proxy definitions already documented above.
 
 ## Key Findings
 
@@ -181,11 +189,7 @@ rwe-pharmacovigilance-pipeline/
 │   └── queries/
 │       ├── 01_medication_history.sql
 │       ├── 02_adverse_events.sql
-│       ├── 03_drug_interactions.sql
-│       ├── 04_safety_signals.sql
-│       ├── 05_treatment_outcomes.sql
-│       ├── 06_cohort_characteristics.sql
-│       └── 07_data_quality_summary.sql
+│       └── 03_drug_interactions.sql
 │
 ├── scripts/
 │   ├── load_data.py                   # Python ETL: loading CSVs into PostgreSQL
