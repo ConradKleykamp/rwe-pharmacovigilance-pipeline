@@ -1,17 +1,18 @@
 -- Medication history & adherence.
 -- Tracks each patient's fill history per drug and flags treatment gaps.
--- Adherence is assessed per patient+drug pair (not per patient overall) — a gap
--- of more than 30 days between one fill's stop and the next fill's start for the
--- same patient/drug is treated as a lapse in treatment. See README's "A note on
--- framing" section for why 30 days was chosen.
---
--- Scoped to oral tablets with 5+ total fills: injectables/gels (e.g. dental
--- fluoride gel, IV antibiotics given during an inpatient stay) are administered
--- episodically, not taken continuously at home, so a multi-year "gap" between
--- them is normal, not non-adherence. Requiring 5+ fills further excludes
--- coincidental one-off prescriptions (e.g. two unrelated antibiotic courses
--- years apart) from being mistaken for a lapsed continuous therapy.
+-- Adherence is assessed per patient+drug pair (not per patient overall)
+-- A "lapse in treament" is represented as a gap of more than 30 days between one fill's stop and the next fill's start
+-- See README's "A note on framing" section for why 30 days was chosen.
 
+-- Scope: oral tablets with 5+ total fills
+-- Injectables/gels (e.g. dental fluoride gel, IV antibiotics given during an inpatient stay) are administered episodically
+-- These are not taken continuously at home, so a multi-year gap between treatments would be normal (not non-adherence)
+-- Requiring 5+ fills further excludes coincidental one-off prescriptions (e.g. two unrelated antibiotic courses taken 5 years apart)
+
+-- CTE 1: medication_gaps
+-- For each patient+drug pair, ordered by fill start date, LAG pulls previous fill's stop onto the current row
+-- First fill of any pair gets previous_stop = NULL (nothing to lag from), handled in next CTE
+-- Window function: LAG(med.stop)
 WITH medication_gaps AS (
     SELECT
         med.patient_id,
@@ -24,9 +25,9 @@ WITH medication_gaps AS (
     WHERE med.description ILIKE '%Oral Tablet%'
 ),
 
--- total_fills = COUNT(*) + 1 because previous_stop IS NULL (the patient's first
--- fill of this drug) was already filtered out below, so COUNT(*) alone would be
--- one short of the true number of fills.
+-- CTE 2: patient_drug_summary
+-- Handles first NULL previous stop from CTE 1
+-- Finds worst gap seen for that patient/drug continuously at home
 patient_drug_summary AS (
     SELECT
         gaps.patient_id,
@@ -40,6 +41,10 @@ patient_drug_summary AS (
     GROUP BY gaps.patient_id, gaps.code, gaps.description
 )
 
+-- Joins to patients for gender
+-- Applies total_fills >= 5 filter
+-- Labels each row adherent/non-adherent via has_treatment_gap boolean
+-- Ordered to show worst lapses first
 SELECT
     pat.id AS patient_id,
     pat.gender,
