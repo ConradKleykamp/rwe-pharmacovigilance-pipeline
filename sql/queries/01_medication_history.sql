@@ -1,7 +1,8 @@
--- Medication history & adherence.
+-- Query #1: Medication history & adherence
+
 -- Tracks each patient's fill history per drug and flags treatment gaps.
 -- Adherence is assessed per patient+drug pair (not per patient overall)
--- A "lapse in treament" is represented as a gap of more than 30 days between one fill's stop and the next fill's start
+-- A "lapse in treatment" is represented as a gap of more than 30 days between one fill's stop and the next fill's start
 -- See README's "A note on framing" section for why 30 days was chosen.
 
 -- Scope: oral tablets with 5+ total fills
@@ -27,7 +28,7 @@ WITH medication_gaps AS (
 
 -- CTE 2: patient_drug_summary
 -- Handles first NULL previous stop from CTE 1
--- Finds worst gap seen for that patient/drug continuously at home
+-- Finds worst gap seen for that patient/drug
 patient_drug_summary AS (
     SELECT
         gaps.patient_id,

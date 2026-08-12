@@ -1,20 +1,17 @@
--- Adverse event identification.
--- Adverse event proxy (see README's "A note on framing"): an inpatient or
--- emergency encounter that overlaps a patient's active medication window.
--- Synthea has no adverse-event flag, so this is a modeled signal, not a
--- literal report.
---
--- Unlike 01_medication_history.sql, this is NOT restricted to oral tablets.
--- That query measured adherence, a concept that only applies to drugs taken
--- continuously at home. This query measures concurrent drug exposure during
--- a hospitalization (polypharmacy as an adverse-event risk factor), which
--- applies just as much to an injectable or IV medication as an oral one.
---
--- Grain: one row per (patient, medication, encounter) — a hospitalization
--- with 3 concurrently active medications produces 3 rows, one flagging each
--- implicated drug, so downstream analysis can ask "which drugs show up most
--- often near hospitalizations."
+-- Query #2: Adverse Event Identification
 
+-- Adverse event proxy: an inpatient or emergency encounter that overlaps a patient's active medication window
+-- Synthea data has no adverse event flag, so this is a modeled signal
+
+-- This query is NOT restricted to oral tablets
+-- This query instead measures concurrent drug exposure during a hospitalization
+-- In other words, polypharmacy as an adverse event risk factor, which applies to all drugs
+
+-- Grain: one row per patient, medication, encounter, e.g. a hospitalization with 3 active medications produces 3 rows
+-- "Which drugs show up most often near hospitalizations"
+
+-- CTE 1: medication_encounter_overlap
+-- Finding a medication that was active during an encounter when it was NOT prescribed
 WITH medication_encounter_overlap AS (
     SELECT
         enc.id AS encounter_id,
@@ -26,18 +23,17 @@ WITH medication_encounter_overlap AS (
     FROM encounters enc
     JOIN medications med ON med.patient_id = enc.patient_id
     WHERE enc.encounterclass IN ('inpatient', 'emergency')
-      -- exclude the encounter that started this medication (that's the
-      -- prescribing visit, not a hospitalization caused by being on it)
+      -- Exclude the encounter that started this medication (that would be the prescribing visit)
       AND med.encounter_id != enc.id
-      -- medication must have been active on the encounter's start date;
+      -- Medication must have been active on the encounter's start date
       -- NULL med.stop means still active (open-ended), so no upper bound
       AND enc.start >= med.start
       AND (med.stop IS NULL OR enc.start <= med.stop)
 ),
 
+-- CTE 2: encounter_severity
 -- Severity proxy: concurrent active-medication count per encounter.
--- Thresholds follow the standard pharmacoepidemiology definition of
--- polypharmacy (5+ concurrent medications), not an invented cutoff.
+-- Thresholds follow the standard pharmacoepidemiology definition of polypharmacy (5+ concurrent medications)
 encounter_severity AS (
     SELECT
         overlap.encounter_id,
@@ -50,6 +46,9 @@ encounter_severity AS (
     FROM medication_encounter_overlap overlap
 )
 
+-- Joins to patients for gender
+-- CASE buckets concurrent_medication_count into low/polypharmacy/excessive polypharmacy
+-- Ordered so the highest-risk (most concurrent drugs) encounters surface first
 SELECT
     pat.id AS patient_id,
     pat.gender,

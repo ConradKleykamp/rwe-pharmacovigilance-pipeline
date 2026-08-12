@@ -1,15 +1,16 @@
--- Drug interaction flags.
--- Synthea does not encode contraindications between medications (see README's
--- "A note on framing"). This project defines a small, hand-curated reference
--- table of known interacting drug classes, built from established clinical
--- knowledge, using only drug names that actually appear in this dataset —
--- documented as curated domain data, not derived from Synthea.
---
--- Classified by ingredient name (ILIKE on description) rather than by `code`:
--- the same drug has a different RxNorm code per dose/form (e.g. simvastatin
--- alone has 4 codes in this data), so matching on the human-readable name is
--- more robust than listing every code.
+-- Query #3: Drug Interaction Flags
 
+-- Synthea does not encode contraindications between medications
+-- This query models two proxies
+-- 1) A way to classify drugs into clinically meaningful groups
+-- 2) A reference table saying which groups are dangerous together (known interacting drug classes)
+-- Uses drug names found in this dataset only
+
+-- Classified by ingredient name (ILIKE on description) rather than by `code`
+-- The same drug has a different RxNorm code per dose/form (e.g. simvastatin has 4 codes in this data)
+
+-- CTE 1: classified_medications
+-- Bucketing every medication into a drug class by ingredient name
 WITH classified_medications AS (
     SELECT
         med.patient_id,
@@ -39,17 +40,17 @@ WITH classified_medications AS (
     FROM medications med
 ),
 
--- Only classified rows can ever participate in a known interaction, so
--- filtering here keeps the self-join below small instead of joining the
--- full medications table against itself.
+-- CTE 2: relevant_medications
+-- Only classified rows can ever participate in a known interaction
+-- Filtering out unclassified drugs; prevents the need for fully joining medications table on itself
 relevant_medications AS (
     SELECT *
     FROM classified_medications
     WHERE drug_class IS NOT NULL
 ),
 
--- Curated reference: known-interacting drug class pairs. Order within each
--- row doesn't matter — the self-join below matches on either ordering.
+-- CTE 3: interacting_pairs
+-- Curated reference table of known interacting drug pairs
 interacting_pairs (class_a, class_b, interaction_risk) AS (
     VALUES
         ('anticoagulant', 'NSAID', 'Increased bleeding risk'),
@@ -59,6 +60,8 @@ interacting_pairs (class_a, class_b, interaction_risk) AS (
         ('calcium_channel_blocker', 'statin', 'Increased myopathy/rhabdomyolysis risk')
 )
 
+-- Joining relevant_medications to itself
+-- Joining to patients for gender
 SELECT
     pat.id AS patient_id,
     pat.gender,
