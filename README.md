@@ -141,31 +141,22 @@ risk.
 
 A running log of progress by day.
 
-- **Day 1 (Aug 5)**: Project ideation. Repo/README setup. Synthea setup and
-  investigation.
-- **Day 2 (Aug 6)**: Synthea patient generation. NOTES.md creation. SQL schema
-  design (`sql/01_schema.sql`).
-- **Day 3 (Aug 7)**: Finalized and annotated `sql/01_schema.sql`. Created
-  `data-dictionary.md`.
-- **Day 4 (Aug 10)**: Fixed schema gaps found in a full audit
-  (`allergies.start/stop`, `patients.FIPS` documentation). Set up local
-  PostgreSQL, `.env` credentials, and a Python virtual environment. Built and ran
-  `scripts/load_data.py`, loading all ~4.86M rows across 7 tables. Built
-  `sql/02_validation.sql` (11 checks across completeness, consistency,
-  plausibility) and `reports/validation_report.md` (99.87% data quality score).
-  Phase 1 complete. Reworked `scripts/validate_data.py` to only print findings,
-  with the report written by hand from that output. Started Phase 2 with
-  `sql/queries/01_medication_history.sql`, scoped to oral tablets with 5+ fills
-  after catching false positives from episodic and injectable medications in the
-  first version.
-- **Day 5 (Aug 11)**: Built `sql/queries/02_adverse_events.sql` (inpatient and
-  emergency encounters overlapping active medication windows, not restricted to
-  oral tablets, severity bucketed by polypharmacy thresholds). Narrowed Phase 2
-  scope from seven queries to three to allow deeper focus on each. Built
-  `sql/queries/03_drug_interactions.sql` (classifies medications into drug
-  classes by ingredient name, self-joins on overlapping active windows, matches
-  against a curated reference table of 5 known-interacting class pairs). Phase 2
-  complete.
+- **Day 1 (Aug 5)**: Project ideation, repo setup, Synthea investigation.
+- **Day 2 (Aug 6)**: Generated Synthea data. Started `sql/01_schema.sql`.
+- **Day 3 (Aug 7)**: Finalized `sql/01_schema.sql`. Created `data-dictionary.md`.
+- **Day 4 (Aug 10)**: Fixed schema gaps from a full audit. Set up PostgreSQL and
+  the Python environment. Loaded ~4.86M rows via `scripts/load_data.py`. Built
+  `sql/02_validation.sql` and `reports/validation_report.md` (99.87% quality
+  score). Phase 1 complete. Started Phase 2 with
+  `sql/queries/01_medication_history.sql`.
+- **Day 5 (Aug 11)**: Built `sql/queries/02_adverse_events.sql` and
+  `sql/queries/03_drug_interactions.sql`. Narrowed Phase 2 scope from seven
+  queries to three. Phase 2 complete.
+- **Day 6 (Aug 12)**: Wrote `reports/analysis_summary.md` and updated Key
+  Findings. Tightened README and `validation_report.md` language. Full repo
+  audit: re-verified every reported number against the live database, fixed
+  stale references and typos, corrected a data-dictionary count, and made
+  `sql/02_validation.sql` safe to re-run.
 
 ## Key Findings
 
