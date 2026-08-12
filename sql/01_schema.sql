@@ -38,7 +38,7 @@ CREATE TABLE encounters (
     reasondescription   TEXT
 );
 
--- manaual index idx_encounters_patient_id: best for easily joining encounters back to patients
+-- manual index idx_encounters_patient_id: best for easily joining encounters back to patients
 -- best to index columns that will be joined or filtered on often
 CREATE INDEX idx_encounters_patient_id ON encounters (patient_id);
 

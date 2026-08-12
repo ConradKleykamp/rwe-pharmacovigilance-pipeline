@@ -9,3 +9,6 @@ data/synthea/
 
 # Python virtual environment
 .venv/
+
+# Project notes
+NOTES.md

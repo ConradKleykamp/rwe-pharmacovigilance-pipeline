@@ -6,6 +6,10 @@
 -- reports/validation_report.md summarizes these findings
 
 -- Validation log of anything flagging as logically wrong
+-- Dropped first so this script is safe to re-run without a manual cleanup step
+-- (mirrors load_data.py's truncate_all, which makes the ETL re-run safe too)
+DROP TABLE IF EXISTS validation_log;
+
 CREATE TABLE validation_log (
     id                 BIGSERIAL PRIMARY KEY,
     check_name         VARCHAR(100) NOT NULL,

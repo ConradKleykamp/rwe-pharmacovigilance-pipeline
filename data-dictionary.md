@@ -26,7 +26,7 @@ Demographic and cohort-definition table. One row per synthetic patient. Source: 
 | `lat`, `lon` | `NUMERIC` | Yes | `LAT`, `LON` | Geographic coordinates |
 | `healthcare_expenses`, `healthcare_coverage`, `income` | `NUMERIC(10,2)` | Yes | same | Dollar amounts |
 
-**Dropped columns**: `SSN`, `DRIVERS`, `PASSPORT`, `PREFIX`, `FIRST`, `MIDDLE`, `LAST`, `SUFFIX`, `MAIDEN`, `BIRTHPLACE`, `ADDRESS` — direct patient identifiers/name fields, not needed for analysis. `FIPS` — county FIPS code, redundant with `county` (already captured) and blank in 1,489 of 5,727 rows; not used by any of the seven analysis queries.
+**Dropped columns**: `SSN`, `DRIVERS`, `PASSPORT`, `PREFIX`, `FIRST`, `MIDDLE`, `LAST`, `SUFFIX`, `MAIDEN`, `BIRTHPLACE`, `ADDRESS` — direct patient identifiers/name fields, not needed for analysis. `FIPS` — county FIPS code, redundant with `county` (already captured) and blank in 1,489 of 5,727 rows; not used by any of the three analysis queries.
 
 ---
 
@@ -92,7 +92,7 @@ Labs, vitals, and survey results. One row per recorded observation. Source: `dat
 
 | Column | Type | Nullable | Source column | Notes |
 |---|---|---|---|---|
-| `id` | `BIGSERIAL` | No | *(none — surrogate)* | Same reasoning as `conditions.id` — 9,133 duplicate rows found on the 4-column natural key |
+| `id` | `BIGSERIAL` | No | *(none — surrogate)* | Same reasoning as `conditions.id` — 9,672 duplicate rows found on the 4-column natural key |
 | `patient_id` | `VARCHAR(36)` | No | `PATIENT` | FK → `patients.id` |
 | `encounter_id` | `VARCHAR(36)` | **Yes** | `ENCOUNTER` | FK → `encounters.id`. ~155,000 rows have no encounter value in the source (likely historical readings not tied to a specific visit) — this is the one table where the encounter FK is optional |
 | `date` | `TIMESTAMP` | No | `DATE` | |
@@ -120,7 +120,7 @@ Care plan / therapy context. One row per care plan assigned to a patient. Source
 | `description` | `VARCHAR(100)` | No | `DESCRIPTION` | Max observed length 80 chars |
 | `reasondescription` | `VARCHAR(100)` | Yes | `REASONDESCRIPTION` | e.g. prediabetes, essential hypertension, CHF |
 
-**Dropped columns**: `CODE`, `REASONCODE` — raw SNOMED codes for the care plan and its reason; none of the seven analysis queries need to join on them, so the human-readable `description`/`reasondescription` text is sufficient here.
+**Dropped columns**: `CODE`, `REASONCODE` — raw SNOMED codes for the care plan and its reason; none of the three analysis queries need to join on them, so the human-readable `description`/`reasondescription` text is sufficient here.
 
 ---
 
@@ -144,4 +144,4 @@ Medication and environmental allergy history. One row per recorded allergy/intol
 
 **Dropped columns**: `SYSTEM` — constant `Unknown` for every row, carries no information.
 
-**Design note**: the source flattens up to two reactions per allergy into side-by-side columns rather than one row per reaction. This was kept as-is rather than normalized into a separate reactions table — none of the seven analysis queries need per-reaction joins, so a normalized table would add structure without analytical payoff.
+**Design note**: the source flattens up to two reactions per allergy into side-by-side columns rather than one row per reaction. This was kept as-is rather than normalized into a separate reactions table — none of the three analysis queries need per-reaction joins, so a normalized table would add structure without analytical payoff.

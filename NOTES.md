@@ -66,7 +66,4 @@
     - vital-sign codes checked against logical physiological bounds
     - Ex: 8302-2 --> body height outside of 0-300 cm range
 
-# TO DO
-- review all new added code/scripts, add comments
-- explain query #1
   

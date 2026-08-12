@@ -33,7 +33,7 @@ def get_engine() -> Engine:
 def clean_nulls(df: pd.DataFrame) -> pd.DataFrame:
     return df.astype(object).where(pd.notnull(df), None)
 
-# Emptying all tables before loading; Ensures we can re-run the script if needed without dublicate-key errors
+# Emptying all tables before loading; Ensures we can re-run the script if needed without duplicate-key errors
 def truncate_all(engine: Engine) -> None:
     tables = "patients, encounters, conditions, medications, observations, careplans, allergies"
     with engine.begin() as conn:
@@ -41,7 +41,6 @@ def truncate_all(engine: Engine) -> None:
     logger.info("Truncated all tables")
 
 # Shared helper function that every "load_..." function calls
-# 
 def load_table(df: pd.DataFrame, table_name: str, engine: Engine) -> None:
     row_count = len(df)
     df = clean_nulls(df)
