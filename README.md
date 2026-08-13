@@ -150,8 +150,7 @@ A running log of progress by day.
   score). Phase 1 complete. Started Phase 2 with
   `sql/queries/01_medication_history.sql`.
 - **Day 5 (Aug 11)**: Built `sql/queries/02_adverse_events.sql` and
-  `sql/queries/03_drug_interactions.sql`. Narrowed Phase 2 scope from seven
-  queries to three. Phase 2 complete.
+  `sql/queries/03_drug_interactions.sql`. Phase 2 complete.
 - **Day 6 (Aug 12)**: Wrote `reports/analysis_summary.md` and updated Key
   Findings. Tightened README and `validation_report.md` language. Full repo
   audit: re-verified every reported number against the live database, fixed
