@@ -128,7 +128,7 @@ were profiled but excluded as out of scope.
 
 Three queries answering clinically relevant questions, covering multi-table
 JOINs, aggregations, window functions, CTEs, date arithmetic, and CASE logic.
-Scoped to three (down from an original plan of seven) to allow deeper, unhurried
+Scoped to three to allow deeper, unhurried
 treatment of each query. These three also map onto the three proxy definitions
 documented above, forming one narrative: adherence, adverse events, interaction
 risk.
